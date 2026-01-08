@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Codex Launcher</title>
+  </head>
+
+  <body>
+    <div id="app">
+      <div class="wrap">
+        <!-- 標題列容器 -->
+        <div class="header-container">
+          <!-- 左側拖曳區 (包含標題) -->
+          <div class="drag-region">
+            <div class="title">🚀 CLI Launcher</div>
+          </div>
+          
+          <!-- 右側按鈕區 (獨立，不設 drag) -->
+          <div class="winbtns">
+            <!-- 新增設定按鈕 -->
+            <button class="winbtn setting" id="settingBtn" title="Settings">⚙️</button>
+            <button class="winbtn" id="minBtn" title="Minimize">—</button>
+            <button class="winbtn close" id="closeBtn" title="Close">×</button>
+          </div>
+        </div>
+
+        <!-- 主內容區 -->
+        <div class="content" id="mainView">
+          
+          <!-- Codex 區塊 -->
+          <div class="tool-group">
+            <div class="group-header">Codex</div>
+            <div class="radios">
+              <label class="radio-label" title="">
+                <input type="radio" name="codexPath" value="0" checked>
+                <span id="lblCodex0">Path 1</span>
+              </label>
+              <label class="radio-label" title="">
+                <input type="radio" name="codexPath" value="1">
+                <span id="lblCodex1">Path 2</span>
+              </label>
+            </div>
+            <button class="big" id="btnCodex">▶ Launch Codex</button>
+          </div>
+
+          <!-- Claude Code 區塊 -->
+          <div class="tool-group">
+            <div class="group-header">Claude Code</div>
+            <div class="radios">
+              <label class="radio-label" title="">
+                <input type="radio" name="claudePath" value="0" checked>
+                <span id="lblClaude0">Path 1</span>
+              </label>
+              <label class="radio-label" title="">
+                <input type="radio" name="claudePath" value="1">
+                <span id="lblClaude1">Path 2</span>
+              </label>
+            </div>
+            <button class="big" id="btnClaude">▶ Launch Claude Code</button>
+          </div>
+
+          <!-- Gemini 區塊 -->
+          <div class="tool-group">
+            <div class="group-header">Gemini</div>
+            <div class="radios">
+              <label class="radio-label" title="">
+                <input type="radio" name="geminiPath" value="0" checked>
+                <span id="lblGemini0">Path 1</span>
+              </label>
+              <label class="radio-label" title="">
+                <input type="radio" name="geminiPath" value="1">
+                <span id="lblGemini1">Path 2</span>
+              </label>
+            </div>
+            <button class="big" id="btnGemini">▶ Launch Gemini</button>
+          </div>
+
+        </div>
+
+        <!-- 設定 Modal (預設隱藏) -->
+        <div class="settings-modal" id="settingsModal" style="display: none;">
+          <div class="modal-header">
+            <span>設定路徑</span>
+            <button class="close-modal" id="closeSettings">×</button>
+          </div>
+          <div class="modal-body">
+            <!-- Codex 設定 -->
+            <div class="set-group">
+              <div class="set-title">Codex Path 1</div>
+              <input type="text" id="inCodexName0" placeholder="別名 (例如: 專案A)">
+              <div class="input-row">
+                <input type="text" id="inCodexPath0" placeholder="路徑 (C:\...)">
+                <button class="browse-btn" data-target="inCodexPath0">📂</button>
+              </div>
+            </div>
+            <div class="set-group">
+              <div class="set-title">Codex Path 2</div>
+              <input type="text" id="inCodexName1" placeholder="別名">
+              <div class="input-row">
+                <input type="text" id="inCodexPath1" placeholder="路徑">
+                <button class="browse-btn" data-target="inCodexPath1">📂</button>
+              </div>
+            </div>
+            <hr>
+            <!-- Claude Code 設定 -->
+            <div class="set-group">
+              <div class="set-title">Claude Code Path 1</div>
+              <input type="text" id="inClaudeName0" placeholder="別名">
+              <div class="input-row">
+                <input type="text" id="inClaudePath0" placeholder="路徑">
+                <button class="browse-btn" data-target="inClaudePath0">📂</button>
+              </div>
+            </div>
+            <div class="set-group">
+              <div class="set-title">Claude Code Path 2</div>
+              <input type="text" id="inClaudeName1" placeholder="別名">
+              <div class="input-row">
+                <input type="text" id="inClaudePath1" placeholder="路徑">
+                <button class="browse-btn" data-target="inClaudePath1">📂</button>
+              </div>
+            </div>
+            <hr>
+            <!-- Gemini 設定 -->
+            <div class="set-group">
+              <div class="set-title">Gemini Path 1</div>
+              <input type="text" id="inGeminiName0" placeholder="別名">
+              <div class="input-row">
+                <input type="text" id="inGeminiPath0" placeholder="路徑">
+                <button class="browse-btn" data-target="inGeminiPath0">📂</button>
+              </div>
+            </div>
+            <div class="set-group">
+              <div class="set-title">Gemini Path 2</div>
+              <input type="text" id="inGeminiName1" placeholder="別名">
+              <div class="input-row">
+                <input type="text" id="inGeminiPath1" placeholder="路徑">
+                <button class="browse-btn" data-target="inGeminiPath1">📂</button>
+              </div>
+            </div>
+
+            <hr>
+            <!-- 介面設定 -->
+            <div class="set-group">
+              <div class="set-title">Window Opacity (透明度) <span id="opacityVal">90%</span></div>
+              <input type="range" id="opacitySlider" min="10" max="100" value="90" style="width: 100%;">
+            </div>
+
+          </div>
+          <div class="modal-footer">
+            <button class="save-btn" id="saveBtn">儲存設定</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <script type="module" src="/main.js"></script>
+  </body>
+</html>
