@@ -2,6 +2,7 @@ import "./styles.css";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow, LogicalSize } from "@tauri-apps/api/window";
 import { open } from "@tauri-apps/plugin-dialog";
+import { listen } from "@tauri-apps/api/event"; // Moved listen import to top
 
 const appWindow = getCurrentWindow();
 
@@ -53,6 +54,11 @@ const DEFAULT_CONFIG = {
         { name: "Default", path: "C:\\" },
         { name: "Alternative", path: "C:\\Work" }
     ],
+    gitRepos: [
+        { name: "", path: "" },
+        { name: "", path: "" },
+        { name: "", path: "" }
+    ],
     opacity: 90 // 預設 90%
 };
 
@@ -66,10 +72,11 @@ try {
 
 // 合併預設值 (確保所有欄位都存在，避免舊資料造成 Crash)
 let config = { ...DEFAULT_CONFIG, ...savedConfig };
-// 深度合併：確保 codex, claude, gemini 陣列也都存在
+// 深度合併：確保 codex, claude, gemini, gitRepos 陣列也都存在
 if (!config.codex) config.codex = DEFAULT_CONFIG.codex;
 if (!config.claude) config.claude = DEFAULT_CONFIG.claude;
 if (!config.gemini) config.gemini = DEFAULT_CONFIG.gemini;
+if (!config.gitRepos) config.gitRepos = DEFAULT_CONFIG.gitRepos;
 if (config.opacity === undefined) config.opacity = 90; // 相容舊設定
 
 // --- 設定背景透明度 ---
@@ -83,7 +90,7 @@ function setWindowOpacity(val) {
     const slider = document.getElementById("opacitySlider");
     const label = document.getElementById("opacityVal");
     if (slider && slider.value != val) slider.value = val;
-    if (label) label.textContent = val + "%";
+    if (label) label.textContent = val + "% સ્ટો";
 }
 
 // --- 初始化 UI ---
@@ -91,6 +98,7 @@ function updateUI() {
     // 套用透明度
     setWindowOpacity(config.opacity);
 
+    // 1. 更新 CLI 工具路徑
     const tools = ["codex", "claude", "gemini"];
     tools.forEach(tool => {
         // 安全存取 DOM 元素，避免因為 ID 打錯而整個掛掉
@@ -105,13 +113,41 @@ function updateUI() {
         safeSetValue(`in${capitalize(tool)}Name1`, config[tool][1].name);
         safeSetValue(`in${capitalize(tool)}Path1`, config[tool][1].path);
     });
+
+    // 2. 更新 Git Repos 設定欄位
+    config.gitRepos.forEach((repo, index) => {
+        safeSetValue(`inGitName${index}`, repo.name);
+        safeSetValue(`inGitPath${index}`, repo.path);
+    });
+
+    // 3. 更新 Git Tab 的下拉選單
+    updateGitSelect();
+}
+
+function updateGitSelect() {
+    const select = document.getElementById("gitRepoSelect");
+    if (!select) return;
+
+    // 清空現有選項，保留 Placeholder
+    select.innerHTML = '<option value="" disabled selected>Select a repository...</option>';
+
+    config.gitRepos.forEach((repo, index) => {
+        if (repo.path && repo.path.trim() !== "") {
+            const option = document.createElement("option");
+            option.value = index; // 用 index 當 value，方便回查
+            // 顯示 Name 或是 Path
+            option.textContent = repo.name ? repo.name : repo.path.split(/[\\/]/).pop(); 
+            option.title = repo.path; // Tooltip 顯示完整路徑
+            select.appendChild(option);
+        }
+    });
 }
 
 // 輔助函式：安全操作 DOM
 function safeSetText(id, text) {
     const el = document.getElementById(id);
     if (el) el.textContent = text;
-    else console.warn(`Element not found: ${id}`);
+    // else console.warn(`Element not found: ${id}`);
 }
 function safeSetTitle(id, title) {
     const el = document.getElementById(id);
@@ -139,7 +175,30 @@ document.querySelector("#minBtn").addEventListener("click", () => appWindow.mini
 document.querySelector("#closeBtn").addEventListener("click", () => appWindow.hide());
 
 
-// --- 啟動邏輯 ---
+// --- Tab 切換邏輯 ---
+document.querySelectorAll(".tab-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+        // 1. Remove active from all tabs
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".tab-content").forEach(c => {
+            c.classList.remove("active");
+            c.style.display = "none"; // 確保完全隱藏
+        });
+
+        // 2. Add active to clicked tab
+        btn.classList.add("active");
+        const tabId = btn.getAttribute("data-tab");
+        const content = document.getElementById(tabId);
+        if (content) {
+            content.style.display = "flex";
+            // 稍微延遲加 active 以觸發 fade-in
+            setTimeout(() => content.classList.add("active"), 10);
+        }
+    });
+});
+
+
+// --- 啟動邏輯 (Launcher) ---
 async function launch(configKey, command) {
     const radios = document.getElementsByName(configKey + "Path");
     let selectedIndex = 0;
@@ -164,7 +223,7 @@ async function launch(configKey, command) {
     }
 }
 
-// 綁定按鈕事件 (加強錯誤處理)
+// 綁定按鈕事件 (Launcher)
 const btnCodex = document.querySelector("#btnCodex");
 if (btnCodex) btnCodex.addEventListener("click", () => launch("codex", "codex"));
 
@@ -173,6 +232,35 @@ if (btnClaude) btnClaude.addEventListener("click", () => launch("claude", "claud
 
 const btnGemini = document.querySelector("#btnGemini");
 if (btnGemini) btnGemini.addEventListener("click", () => launch("gemini", "gemini"));
+
+
+// --- Git 控制邏輯 ---
+async function runGit(command, args) {
+    const outputEl = document.getElementById("gitOutput");
+    const select = document.getElementById("gitRepoSelect");
+    
+    if (!select || select.value === "") {
+        if (outputEl) outputEl.textContent = "Please select a repository first.";
+        return;
+    }
+
+    const repoIndex = parseInt(select.value);
+    const repoPath = config.gitRepos[repoIndex].path;
+
+    if (outputEl) outputEl.textContent = `> git ${args.join(" ")}\n`;
+
+    try {
+        // 呼叫後端指令
+        const result = await invoke("run_git_cmd", { cwd: repoPath, args: args });
+        if (outputEl) outputEl.textContent = result;
+    } catch (err) {
+        if (outputEl) outputEl.textContent = `Error: ${err}`;
+    }
+}
+
+document.getElementById("btnGitStatus")?.addEventListener("click", () => runGit("status", ["status"]));
+document.getElementById("btnGitPull")?.addEventListener("click", () => runGit("pull", ["pull"]));
+document.getElementById("btnGitLog")?.addEventListener("click", () => runGit("log", ["log", "--oneline", "-n", "10"]));
 
 
 // --- 設定 Modal 邏輯 ---
@@ -211,6 +299,7 @@ if (closeSettingsBtn) {
 
 if (saveBtn) {
     saveBtn.addEventListener("click", () => {
+        // 1. Save Launcher Paths
         const tools = ["codex", "claude", "gemini"];
         tools.forEach(tool => {
             const name0 = document.getElementById(`in${capitalize(tool)}Name0`);
@@ -223,14 +312,22 @@ if (saveBtn) {
             if (name1) config[tool][1].name = name1.value;
             if (path1) config[tool][1].path = path1.value;
         });
+
+        // 2. Save Git Repos
+        config.gitRepos.forEach((repo, index) => {
+            const n = document.getElementById(`inGitName${index}`);
+            const p = document.getElementById(`inGitPath${index}`);
+            if (n) repo.name = n.value;
+            if (p) repo.path = p.value;
+        });
         
-        // 儲存透明度
+        // 3. Save Opacity
         if (opacitySlider) {
             config.opacity = parseInt(opacitySlider.value);
         }
 
         localStorage.setItem("launcher_config", JSON.stringify(config));
-        updateUI();
+        updateUI(); // Update Select Options
         if (modal) modal.style.display = "none";
     });
 }
@@ -259,7 +356,7 @@ document.querySelectorAll(".browse-btn").forEach(btn => {
 
 // --- 拖曳啟動邏輯 (Drag & Drop) ---
 const toolGroups = document.querySelectorAll(".tool-group");
-const commands = ["codex", "claude", "gemini"];
+const launcherCommands = ["codex", "claude", "gemini"];
 
 // 1. 純視覺回饋 (HTML5 Drag Events)
 toolGroups.forEach((group) => {
@@ -277,8 +374,6 @@ toolGroups.forEach((group) => {
 });
 
 // 2. 邏輯處理 (Tauri Global Drag Event)
-import { listen } from "@tauri-apps/api/event";
-
 listen("tauri://drag-drop", (event) => {
     // event.payload = { paths: string[], position: { x, y } }
     if (event.payload.paths && event.payload.paths.length > 0) {
@@ -293,18 +388,28 @@ listen("tauri://drag-drop", (event) => {
             const group = element.closest(".tool-group");
             
             if (group) {
+                // 判斷是在 Launcher Tab 還是在 Git Tab?
+                // 目前僅 Launcher 支援拖曳啟動
                 // 找出是哪個指令 (codex, claude, gemini)
-                // 我們可以靠 DOM 順序判斷
-                const index = Array.from(toolGroups).indexOf(group);
-                if (index !== -1) {
-                    const command = commands[index];
-                    // 啟動！
-                    invoke("launch_cli", { tool: command, path: path })
-                        .catch(err => alert("Drag Launch Failed: " + err));
+                // 注意：現在因為多了 Git Panel，tool-group 的索引可能會變
+                // 最好的方法是檢查父容器是誰
+                const parentTab = group.parentElement;
+                if (parentTab.id === "tab-launcher") {
+                    // 在 tab-launcher 內的 tool-group 索引對應 commands
+                    // 這裡重新抓一次 tab-launcher 裡面的 tool-group 來算 index
+                    const launcherGroups = document.querySelectorAll("#tab-launcher .tool-group");
+                    const index = Array.from(launcherGroups).indexOf(group);
                     
-                    // 清除樣式 (保險起見)
-                    group.classList.remove("drag-over");
+                    if (index !== -1 && index < launcherCommands.length) {
+                         const command = launcherCommands[index];
+                        // 啟動！
+                        invoke("launch_cli", { tool: command, path: path })
+                            .catch(err => alert("Drag Launch Failed: " + err));
+                    }
                 }
+                
+                // 清除樣式 (保險起見)
+                group.classList.remove("drag-over");
             }
         }
     }

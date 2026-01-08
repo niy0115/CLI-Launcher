@@ -25,55 +25,83 @@
           </div>
         </div>
 
+        <!-- 頁籤導航 -->
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="tab-launcher">🚀 Launcher</button>
+          <button class="tab-btn" data-tab="tab-git">📦 Git Control</button>
+        </div>
+
         <!-- 主內容區 -->
         <div class="content" id="mainView">
           
-          <!-- Codex 區塊 -->
-          <div class="tool-group">
-            <div class="group-header">Codex</div>
-            <div class="radios">
-              <label class="radio-label" title="">
-                <input type="radio" name="codexPath" value="0" checked>
-                <span id="lblCodex0">Path 1</span>
-              </label>
-              <label class="radio-label" title="">
-                <input type="radio" name="codexPath" value="1">
-                <span id="lblCodex1">Path 2</span>
-              </label>
+          <!-- Tab 1: Launcher -->
+          <div id="tab-launcher" class="tab-content active">
+            <!-- Codex 區塊 -->
+            <div class="tool-group">
+              <div class="group-header">Codex</div>
+              <div class="radios">
+                <label class="radio-label" title="">
+                  <input type="radio" name="codexPath" value="0" checked>
+                  <span id="lblCodex0">Path 1</span>
+                </label>
+                <label class="radio-label" title="">
+                  <input type="radio" name="codexPath" value="1">
+                  <span id="lblCodex1">Path 2</span>
+                </label>
+              </div>
+              <button class="big" id="btnCodex">▶ Launch Codex</button>
             </div>
-            <button class="big" id="btnCodex">▶ Launch Codex</button>
+
+            <!-- Claude Code 區塊 -->
+            <div class="tool-group">
+              <div class="group-header">Claude Code</div>
+              <div class="radios">
+                <label class="radio-label" title="">
+                  <input type="radio" name="claudePath" value="0" checked>
+                  <span id="lblClaude0">Path 1</span>
+                </label>
+                <label class="radio-label" title="">
+                  <input type="radio" name="claudePath" value="1">
+                  <span id="lblClaude1">Path 2</span>
+                </label>
+              </div>
+              <button class="big" id="btnClaude">▶ Launch Claude Code</button>
+            </div>
+
+            <!-- Gemini 區塊 -->
+            <div class="tool-group">
+              <div class="group-header">Gemini</div>
+              <div class="radios">
+                <label class="radio-label" title="">
+                  <input type="radio" name="geminiPath" value="0" checked>
+                  <span id="lblGemini0">Path 1</span>
+                </label>
+                <label class="radio-label" title="">
+                  <input type="radio" name="geminiPath" value="1">
+                  <span id="lblGemini1">Path 2</span>
+                </label>
+              </div>
+              <button class="big" id="btnGemini">▶ Launch Gemini</button>
+            </div>
           </div>
 
-          <!-- Claude Code 區塊 -->
-          <div class="tool-group">
-            <div class="group-header">Claude Code</div>
-            <div class="radios">
-              <label class="radio-label" title="">
-                <input type="radio" name="claudePath" value="0" checked>
-                <span id="lblClaude0">Path 1</span>
-              </label>
-              <label class="radio-label" title="">
-                <input type="radio" name="claudePath" value="1">
-                <span id="lblClaude1">Path 2</span>
-              </label>
+          <!-- Tab 2: Git Control -->
+          <div id="tab-git" class="tab-content" style="display: none;">
+            <div class="tool-group git-panel">
+              <div class="group-header">Git Repository</div>
+              <select id="gitRepoSelect" class="git-select">
+                <option value="" disabled selected>Select a repository...</option>
+              </select>
+              <div class="git-actions">
+                <button class="git-btn" id="btnGitStatus">Status</button>
+                <button class="git-btn" id="btnGitPull">Pull</button>
+                <button class="git-btn" id="btnGitLog">Log</button>
+              </div>
             </div>
-            <button class="big" id="btnClaude">▶ Launch Claude Code</button>
-          </div>
-
-          <!-- Gemini 區塊 -->
-          <div class="tool-group">
-            <div class="group-header">Gemini</div>
-            <div class="radios">
-              <label class="radio-label" title="">
-                <input type="radio" name="geminiPath" value="0" checked>
-                <span id="lblGemini0">Path 1</span>
-              </label>
-              <label class="radio-label" title="">
-                <input type="radio" name="geminiPath" value="1">
-                <span id="lblGemini1">Path 2</span>
-              </label>
+            
+            <div class="terminal-output" id="gitOutput">
+              <span class="placeholder">Select a repo to see status...</span>
             </div>
-            <button class="big" id="btnGemini">▶ Launch Gemini</button>
           </div>
 
         </div>
@@ -136,6 +164,34 @@
               <div class="input-row">
                 <input type="text" id="inGeminiPath1" placeholder="路徑">
                 <button class="browse-btn" data-target="inGeminiPath1">📂</button>
+              </div>
+            </div>
+
+            <hr>
+            
+            <!-- Git Repos 設定 -->
+             <div class="set-group">
+              <div class="set-title" style="color: #ff9d00;">Git Repo 1</div>
+              <input type="text" id="inGitName0" placeholder="別名 (e.g. Frontend)">
+              <div class="input-row">
+                <input type="text" id="inGitPath0" placeholder="Git 專案路徑">
+                <button class="browse-btn" data-target="inGitPath0">📂</button>
+              </div>
+            </div>
+             <div class="set-group">
+              <div class="set-title" style="color: #ff9d00;">Git Repo 2</div>
+              <input type="text" id="inGitName1" placeholder="別名">
+              <div class="input-row">
+                <input type="text" id="inGitPath1" placeholder="Git 專案路徑">
+                <button class="browse-btn" data-target="inGitPath1">📂</button>
+              </div>
+            </div>
+             <div class="set-group">
+              <div class="set-title" style="color: #ff9d00;">Git Repo 3</div>
+              <input type="text" id="inGitName2" placeholder="別名">
+              <div class="input-row">
+                <input type="text" id="inGitPath2" placeholder="Git 專案路徑">
+                <button class="browse-btn" data-target="inGitPath2">📂</button>
               </div>
             </div>
 

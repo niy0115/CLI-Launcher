@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Exclude specific images
+error_1.png
+error_2.png
+UI.png

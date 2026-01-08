@@ -6,6 +6,41 @@ use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{TrayIconBuilder, TrayIconEvent};
 
 const CREATE_NEW_CONSOLE: u32 = 0x00000010;
+const CREATE_NO_WINDOW: u32 = 0x08000000;
+
+#[tauri::command]
+fn run_git_cmd(cwd: String, args: Vec<String>) -> Result<String, String> {
+    if !Path::new(&cwd).exists() {
+        return Err(format!("Path does not exist: {}", cwd));
+    }
+
+    let output = Command::new("git")
+        .args(&args)
+        .current_dir(&cwd)
+        .creation_flags(CREATE_NO_WINDOW)
+        .output()
+        .map_err(|e| format!("Failed to execute git: {}", e))?;
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    let mut result = String::new();
+    if !stdout.is_empty() {
+        result.push_str(&stdout);
+    }
+    if !stderr.is_empty() {
+        if !result.is_empty() {
+            result.push_str("\n--- stderr ---\n");
+        }
+        result.push_str(&stderr);
+    }
+
+    if result.is_empty() {
+        Ok("(No output)".to_string())
+    } else {
+        Ok(result)
+    }
+}
 
 #[tauri::command]
 fn launch_cli(tool: String, path: String) -> Result<(), String> {
@@ -83,7 +118,7 @@ pub fn run() {
 
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![launch_cli])
+        .invoke_handler(tauri::generate_handler![launch_cli, run_git_cmd])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

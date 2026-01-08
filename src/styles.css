@@ -47,6 +47,7 @@ html, body, #app {
   padding: 0 12px;
   background: rgba(255, 255, 255, 0.03);
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  flex-shrink: 0;
 }
 
 .drag-region {
@@ -112,6 +113,48 @@ html, body, #app {
   transform: rotate(90deg);
 }
 
+/* --- Tabs Styling --- */
+.tabs {
+  display: flex;
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid var(--border-color);
+  height: 40px;
+  flex-shrink: 0;
+}
+
+.tab-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+  border-bottom: 2px solid transparent;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tab-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.tab-btn.active {
+  color: var(--neon-cyan);
+  border-bottom-color: var(--neon-cyan);
+  background: rgba(0, 243, 255, 0.05);
+  text-shadow: 0 0 8px rgba(0, 243, 255, 0.4);
+}
+
+.tab-btn[data-tab="tab-git"].active {
+  color: #ff9d00;
+  border-bottom-color: #ff9d00;
+  background: rgba(255, 157, 0, 0.05);
+  text-shadow: 0 0 8px rgba(255, 157, 0, 0.4);
+}
+
 /* Main Content */
 .content {
   flex: 1;
@@ -119,8 +162,18 @@ html, body, #app {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  justify-content: center;
 }
+
+.tab-content {
+  display: none;
+  flex-direction: column;
+  height: 100%;
+}
+.tab-content.active {
+  display: flex;
+  animation: fadeIn 0.2s ease-out;
+}
+
 
 .tool-group {
   margin-bottom: 30px;
@@ -291,6 +344,74 @@ html, body, #app {
   box-shadow: 0 0 20px rgba(10, 255, 10, 0.6);
   transform: translateY(-1px);
 }
+
+/* --- Git Control Styles --- */
+.git-panel {
+  background: rgba(255, 157, 0, 0.05); /* Orange tint */
+  border-color: rgba(255, 157, 0, 0.3);
+}
+.git-panel .group-header {
+  color: #ff9d00;
+}
+.git-panel .group-header::before {
+  background: #ff9d00;
+  box-shadow: 0 0 8px #ff9d00;
+}
+
+.git-select {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 8px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  outline: none;
+}
+.git-select:focus {
+  border-color: #ff9d00;
+}
+
+.git-actions {
+  display: flex;
+  gap: 10px;
+}
+.git-btn {
+  flex: 1;
+  padding: 8px;
+  background: rgba(255, 157, 0, 0.1);
+  border: 1px solid rgba(255, 157, 0, 0.3);
+  color: #ff9d00;
+  cursor: pointer;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: 0.2s;
+}
+.git-btn:hover {
+  background: #ff9d00;
+  color: #000;
+  box-shadow: 0 0 10px rgba(255, 157, 0, 0.4);
+}
+
+.terminal-output {
+  background: #000;
+  color: #0f0;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 12px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  flex: 1;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+  opacity: 0.9;
+}
+.terminal-output .placeholder {
+  color: #666;
+  font-style: italic;
+}
+
 
 /* Settings Modal */
 .settings-modal {
