@@ -43,6 +43,24 @@ fn run_git_cmd(cwd: String, args: Vec<String>) -> Result<String, String> {
 }
 
 #[tauri::command]
+fn resize_window(window: tauri::Window, width: f64, height: f64) -> Result<(), String> {
+    // 1. 解鎖
+    let _ = window.set_resizable(true);
+    
+    // 2. 變更大小
+    let _ = window.set_size(tauri::Size::Logical(tauri::LogicalSize { width, height }));
+    
+    // 3. 稍微延遲後鎖定，確保 Windows 有時間處理 Resize 訊息
+    // 需引入 std::thread 和 std::time
+    std::thread::sleep(std::time::Duration::from_millis(100));
+    
+    // 4. 鎖定
+    let _ = window.set_resizable(false);
+    
+    Ok(())
+}
+
+#[tauri::command]
 fn launch_cli(tool: String, path: String) -> Result<(), String> {
     // 檢查路徑是否存在
     if !Path::new(&path).exists() {
@@ -118,7 +136,7 @@ pub fn run() {
 
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![launch_cli, run_git_cmd])
+        .invoke_handler(tauri::generate_handler![launch_cli, run_git_cmd, resize_window])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

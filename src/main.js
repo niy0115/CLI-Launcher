@@ -177,7 +177,7 @@ document.querySelector("#closeBtn").addEventListener("click", () => appWindow.hi
 
 // --- Tab 切換邏輯 ---
 document.querySelectorAll(".tab-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
+    btn.addEventListener("click", async () => {
         // 1. Remove active from all tabs
         document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
         document.querySelectorAll(".tab-content").forEach(c => {
@@ -193,6 +193,18 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
             content.style.display = "flex";
             // 稍微延遲加 active 以觸發 fade-in
             setTimeout(() => content.classList.add("active"), 10);
+        }
+
+        // 3. Resize Window based on Tab
+        try {
+            // 使用後端指令來強制改變視窗大小 (解決 Windows resizable=false 的問題)
+            if (tabId === "tab-git") {
+                await invoke("resize_window", { width: 900.0, height: 750.0 });
+            } else {
+                await invoke("resize_window", { width: 400.0, height: 750.0 });
+            }
+        } catch (e) {
+            console.error("Failed to resize window:", e);
         }
     });
 });

@@ -395,9 +395,9 @@ html, body, #app {
 
 .terminal-output {
   background: #000;
-  color: #0f0;
+  color: #ff9d00;
   font-family: 'Consolas', 'Courier New', monospace;
-  font-size: 12px;
+  font-size: 14px;
   padding: 10px;
   border-radius: 8px;
   border: 1px solid #333;
